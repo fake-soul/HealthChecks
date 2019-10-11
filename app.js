@@ -6,17 +6,22 @@ var request = require('request'),
 
 app.use(bodyParser());
 
+// TODO: DB or config file
 var preURL = [
     "https://www.google.com",
     "https://www.fb.com",
     "https://www.myspace.com",
     "https://www.youtubve23434.com",
-    "http://backend.foodstag.in/"
+    "http://backend.foodstag.in/",
+    "https://bharat.free.beeceptor.com/favicon.ico",
+    "https://bharat.free.beeceptor.com/403",
+    "https://bharat.free.beeceptor.com/503"
 ];
 
+// TODO: without exposing route?
 app.get("/", function(req, res) {
+    // TODO: Modify contains to be sent to client
     async.map(preURL, getURL, (error, result) => {
-        // res.send(result);
         console.log(result);
         request({
             method: 'POST',
@@ -24,14 +29,14 @@ app.get("/", function(req, res) {
             json: {
                 "type": "message",
                 "textFormat": "plain",
-                "text": result.toString()
+                "text": JSON.stringify(result)
             },
         }, (error, response, body) => {
             if(error) {
                 console.log(error);
             }
             else{
-                console.log("working");
+                console.log("Sent to Client");
                 setTimeout(function () {
                     res.redirect('/');
                 }, 2000)
@@ -41,28 +46,21 @@ app.get("/", function(req, res) {
 })
 
 
-app.get("/custom", function(req, res){
+app.get("/customURL", function(req, res){
     async.map(req.body.urls, getURL, (error, result) => {
         res.send(result);
     });
 });
 
-app.post("/addPre", function(req, res) {
-    // preURL.push(req.body.urls);
-    // res.send(preURL);
+app.post("/addPreURL", function(req, res) {
     req.body.urls.forEach(element => {
         preURL.push(element);
     });
     res.send(preURL);
 });
 
-app.get("/showPRE", function(req, res) {
+app.get("/showPREURL", function(req, res) {
     res.send(preURL);
-});
-app.get("/pre", function(req, res) {
-    async.map(preURL, getURL, (error, result) => {
-        res.send(result);
-    });
 });
 
 var urls = [];
@@ -70,10 +68,10 @@ function getURL(url, callback) {
     request
         .get(url)
         .on('error', function(err) {
-            callback(null, "url  : " +url+ " errorCode :" +err.code +"                  \n");
+            callback(null, {"url": url, "errorCode": err.code});
         })
         .on('response', function(response) {
-        callback(null, "url  : " +url+ " statusCode :" +response.statusCode+"              \n");
+        callback(null, {"url": url, "statusCode" : response.statusCode});
     });
 }
 function done(error, result) {
